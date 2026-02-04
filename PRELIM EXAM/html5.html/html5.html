@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>College of Computer Studies</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a onclick="showPage('home')">Home</a>
+  <a onclick="showPage('about')">About</a>
+  <a onclick="showPage('programs')">Programs</a>
+  <a onclick="showPage('faculty')">Faculty</a>
+  <a onclick="showPage('announcements')">Announcements</a>
+  <a onclick="showPage('contact')">Contact</a>
+</nav>
+
+<section id="home" class="active">
+  <div class="card">
+    <h1 id="welcome"></h1>
+    <p>
+      The <strong>College of Computer Studies (CCS)</strong> produces
+      competent, innovative, and ethical IT professionals.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Why Choose CCS?</h3>
+    <ul>
+      <li>Industry-aligned curriculum</li>
+      <li>Experienced faculty</li>
+      <li>Hands-on laboratory work</li>
+      <li>Student-centered learning</li>
+    </ul>
+  </div>
+</section>
+
+<section id="about">
+  <div class="card">
+    <h2>About the College</h2>
+
+    <button class="accordion">Mission</button>
+    <div class="panel">
+      To provide quality computer education aligned with industry needs.
+    </div>
+
+    <button class="accordion">Vision</button>
+    <div class="panel">
+      To be a center of excellence in computing education and innovation.
+    </div>
+
+    <button class="accordion">Core Values</button>
+    <div class="panel">
+      Excellence, Integrity, Innovation, Collaboration, Service.
+    </div>
+  </div>
+</section>
+
+<section id="programs">
+  <div class="card">
+    <h2>Academic Programs</h2>
+
+    <div class="tabs">
+      <button onclick="showProgram('bsit')">BSIT</button>
+      <button onclick="showProgram('bscs')">BSCS</button>
+      <button onclick="showProgram('act')">ACT</button>
+    </div>
+
+    <div id="bsit" class="program card">
+      <h3>BS in Information Technology</h3>
+      <p>Web development, networking, cybersecurity, and IT management.</p>
+    </div>
+
+    <div id="bscs" class="program card">
+      <h3>BS in Computer Science</h3>
+      <p>Algorithms, AI, data structures, and software engineering.</p>
+    </div>
+
+    <div id="act" class="program card">
+      <h3>Associate in Computer Technology</h3>
+      <p>Practical IT skills for immediate employment.</p>
+    </div>
+  </div>
+</section>
+
+<section id="faculty">
+  <div class="card">
+    <h2>Faculty Directory</h2>
+    <input type="text" id="search" placeholder="Search faculty">
+    <ul id="facultyList"></ul>
+  </div>
+</section>
+
+<section id="announcements">
+  <div class="card">
+    <h2>Announcements & Events</h2>
+    <ul id="eventList"></ul>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="card">
+    <h2>Contact / Inquiry</h2>
+    <form id="contactForm">
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="email" id="email" placeholder="Email Address">
+      <textarea id="message" rows="4" placeholder="Your Message"></textarea>
+      <button class="submit" type="submit">Submit Inquiry</button>
+    </form>
+  </div>
+</section>
+
+<script src="js/script.js"></script>
+</body>
+</html>

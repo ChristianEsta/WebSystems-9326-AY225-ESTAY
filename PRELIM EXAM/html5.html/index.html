@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>College of Computer Studies</title>
+
+<style>
+:root {
+  --primary: #0b3c5d;
+  --secondary: #328cc1;
+  --light: #f4f6f9;
+  --white: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--light);
+  color: #333;
+}
+
+/* ===== NAVIGATION ===== */
+nav {
+  background: var(--primary);
+  padding: 15px 30px;
+  display: flex;
+  gap: 20px;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* ===== SECTIONS ===== */
+section {
+  display: none;
+  padding: 40px;
+  animation: fade 0.5s ease-in-out;
+}
+
+section.active {
+  display: block;
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== COMMON ===== */
+h1, h2, h3 {
+  color: var(--primary);
+}
+
+.card {
+  background: var(--white);
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* ===== ACCORDION ===== */
+.accordion {
+  background: var(--secondary);
+  color: white;
+  padding: 12px;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.panel {
+  display: none;
+  padding: 15px;
+  background: #eef3f8;
+  border-radius: 5px;
+}
+
+/* ===== TABS ===== */
+.tabs button {
+  padding: 10px 15px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 5px;
+  background: var(--secondary);
+  color: white;
+  cursor: pointer;
+}
+
+.tabs button:hover {
+  opacity: 0.9;
+}
+
+.program {
+  display: none;
+  margin-top: 20px;
+}
+
+/* ===== FACULTY ===== */
+input, textarea {
+  padding: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* ===== CONTACT ===== */
+button.submit {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <a onclick="showPage('home')">Home</a>
+  <a onclick="showPage('about')">About</a>
+  <a onclick="showPage('programs')">Programs</a>
+  <a onclick="showPage('faculty')">Faculty</a>
+  <a onclick="showPage('announcements')">Announcements</a>
+  <a onclick="showPage('contact')">Contact</a>
+</nav>
+
+<!-- ===== HOME ===== -->
+<section id="home" class="active">
+  <div class="card">
+    <h1 id="welcome"></h1>
+    <p>
+      The <strong>College of Computer Studies (CCS)</strong> is dedicated to
+      producing competent, innovative, and ethical IT professionals ready
+      to meet the demands of the global technology industry.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Why Choose CCS?</h3>
+    <ul>
+      <li>✔ Industry-aligned curriculum</li>
+      <li>✔ Experienced and certified faculty</li>
+      <li>✔ Hands-on programming and laboratory work</li>
+      <li>✔ Student-centered learning environment</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section id="about">
+  <div class="card">
+    <h2>About the College</h2>
+
+    <button class="accordion">Mission</button>
+    <div class="panel">
+      To provide high-quality computer education that empowers students
+      with technical skills, critical thinking, and professional ethics.
+    </div>
+
+    <button class="accordion">Vision</button>
+    <div class="panel">
+      To be a center of excellence in computing education, research,
+      and innovation.
+    </div>
+
+    <button class="accordion">Core Values</button>
+    <div class="panel">
+      Excellence, Integrity, Innovation, Collaboration, and Service.
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROGRAMS ===== -->
+<section id="programs">
+  <div class="card">
+    <h2>Academic Programs</h2>
+
+    <div class="tabs">
+      <button onclick="showProgram('bsit')">BSIT</button>
+      <button onclick="showProgram('bscs')">BSCS</button>
+      <button onclick="showProgram('act')">ACT</button>
+    </div>
+
+    <div id="bsit" class="program card">
+      <h3>BS in Information Technology</h3>
+      <p>
+        Focuses on web development, networking, database systems,
+        cybersecurity, and IT project management.
+      </p>
+    </div>
+
+    <div id="bscs" class="program card">
+      <h3>BS in Computer Science</h3>
+      <p>
+        Emphasizes algorithms, data structures, artificial intelligence,
+        and software engineering.
+      </p>
+    </div>
+
+    <div id="act" class="program card">
+      <h3>Associate in Computer Technology</h3>
+      <p>
+        Provides practical IT skills for immediate employment or further studies.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FACULTY ===== -->
+<section id="faculty">
+  <div class="card">
+    <h2>Faculty Directory</h2>
+    <input type="text" id="search" placeholder="Search faculty by name">
+    <ul id="facultyList"></ul>
+  </div>
+</section>
+
+<!-- ===== ANNOUNCEMENTS ===== -->
+<section id="announcements">
+  <div class="card">
+    <h2>Announcements & Events</h2>
+    <ul id="eventList"></ul>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section id="contact">
+  <div class="card">
+    <h2>Contact / Inquiry</h2>
+    <form id="contactForm">
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="email" id="email" placeholder="Email Address">
+      <textarea id="message" rows="4" placeholder="Your Message"></textarea>
+      <button class="submit" type="submit">Submit Inquiry</button>
+    </form>
+  </div>
+</section>
+
+<script>
+// ===== PAGE SWITCH =====
+function showPage(id) {
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+// ===== HOME =====
+document.getElementById("welcome").textContent =
+  "Welcome to the College of Computer Studies";
+
+// ===== ACCORDION =====
+document.querySelectorAll(".accordion").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const panel = btn.nextElementSibling;
+    panel.style.display = panel.style.display === "block" ? "none" : "block";
+  });
+});
+
+// ===== PROGRAMS =====
+function showProgram(id) {
+  document.querySelectorAll(".program").forEach(p => p.style.display = "none");
+  document.getElementById(id).style.display = "block";
+}
+
+// ===== FACULTY =====
+const faculty = [
+  { name: "Dr. Maria Cruz", field: "Programming" },
+  { name: "Prof. Juan Santos", field: "Networking" },
+  { name: "Engr. Ana Reyes", field: "Web Development" },
+  { name: "Prof. Leo Mendoza", field: "Database Systems" }
+];
+
+const facultyList = document.getElementById("facultyList");
+const search = document.getElementById("search");
+
+function renderFaculty(data) {
+  facultyList.innerHTML = data.map(f =>
+    `<li><strong>${f.name}</strong> – ${f.field}</li>`
+  ).join("");
+}
+
+search.addEventListener("input", e => {
+  renderFaculty(faculty.filter(f =>
+    f.name.toLowerCase().includes(e.target.value.toLowerCase())
+  ));
+});
+
+renderFaculty(faculty);
+
+// ===== ANNOUNCEMENTS (LocalStorage) =====
+const events = JSON.parse(localStorage.getItem("events")) || [
+  "CCS Orientation Program",
+  "IT Week Celebration",
+  "Student Hackathon 2026",
+  "Faculty Development Seminar"
+];
+
+localStorage.setItem("events", JSON.stringify(events));
+
+const eventList = document.getElementById("eventList");
+events.forEach(e => {
+  const li = document.createElement("li");
+  li.textContent = e;
+  eventList.appendChild(li);
+});
+
+// ===== CONTACT FORM =====
+document.getElementById("contactForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const message = document.getElementById("message").value;
+
+  if (!name || !email || !message) {
+    alert("Please complete all fields.");
+    return;
+  }
+
+  alert("Thank you! Your inquiry has been submitted.");
+  e.target.reset();
+});
+</script>
+
+</body>
+</html>
