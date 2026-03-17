@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GeeksforGeeks AI Complete Learning Hub - ZERO Hardcoded Data</title>
+    <title>GeeksforGeeks AI Hub - Offline Scraper & PDF Generator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -35,6 +35,16 @@
             margin-top: 10px;
             font-weight: bold;
             animation: pulse 2s infinite;
+        }
+        .badge-offline {
+            background: #3b82f6;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-top: 10px;
+            margin-left: 10px;
+            font-weight: bold;
         }
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -86,6 +96,7 @@
         .btn-secondary { background: #4a5568; color: white; }
         .btn-info { background: #4299e1; color: white; }
         .btn-success { background: #48bb78; color: white; }
+        .btn-warning { background: #e67e22; color: white; }
         .btn-small { padding: 8px 16px; font-size: 0.85em; min-width: 90px; }
         
         .status-bar {
@@ -105,6 +116,7 @@
         .status-bar.error { background: #fed7d7; color: #c53030; }
         .status-bar.success { background: #c6f6d5; color: #22543d; }
         .status-bar.warning { background: #feebc8; color: #744210; }
+        .status-bar.info { background: #e6f0ff; color: #1e3a8a; }
         
         .spinner {
             width: 20px; height: 20px;
@@ -299,6 +311,16 @@
             display: inline-block;
         }
         
+        .offline-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            margin-left: 8px;
+            display: inline-block;
+        }
+        
         .table-container { overflow-x: auto; margin: 20px 0; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         table {
             width: 100%;
@@ -362,6 +384,33 @@
             flex-wrap: wrap;
         }
         
+        .storage-info {
+            background: #f0f9ff;
+            border: 1px solid #3b82f6;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .offline-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .offline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00c853;
+            animation: pulse 2s infinite;
+        }
+        
         .footer {
             background: #0a0f1e;
             color: #a8b2d1;
@@ -374,21 +423,30 @@
             color: #718096;
         }
         
-        .breadcrumb {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: #edf2f7;
-            border-radius: 8px;
-        }
-        
         .pdf-progress {
             margin-top: 15px;
-            padding: 10px;
+            padding: 15px;
             background: #e2e8f0;
             border-radius: 8px;
-            font-size: 0.9em;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .pdf-progress-bar {
+            flex: 1;
+            height: 8px;
+            background: #cbd5e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .pdf-progress-fill {
+            height: 100%;
+            background: #48bb78;
+            width: 0%;
+            transition: width 0.3s ease;
         }
         
         @media (max-width: 768px) {
@@ -406,7 +464,10 @@
         <div class="header">
             <h1>🤖 GeeksforGeeks AI Complete Learning Hub</h1>
             <p>ZERO Hardcoded Data • 100% Dynamic • Real-Time AI Content</p>
-            <div class="badge-zero">✓ 0% Hardcoded • Everything Fetched Live</div>
+            <div>
+                <span class="badge-zero">✓ 0% Hardcoded • Everything Fetched Live</span>
+                <span class="badge-offline">✓ Offline Ready • PDF Export</span>
+            </div>
         </div>
 
         <div class="main-content">
@@ -420,6 +481,17 @@
 
                 <div id="status" class="status-bar" style="display: none;"></div>
 
+                <div class="storage-info" id="storageInfo" style="display: none;">
+                    <div class="offline-status">
+                        <span class="offline-dot"></span>
+                        <span><strong>Offline Storage Ready</strong> - <span id="storedTopicsCount">0</span> topics saved for offline access</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-small btn-info" id="viewOfflineBtn">📁 View Offline Data</button>
+                        <button class="btn btn-small btn-warning" id="clearOfflineBtn">🗑️ Clear Offline Data</button>
+                    </div>
+                </div>
+
                 <div id="progressSection" style="display: none;">
                     <div class="progress-container">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -430,6 +502,14 @@
                             <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
                         </div>
                         <div id="currentTopic" style="margin-top: 10px; color: #4a5568; font-weight: 500;"></div>
+                    </div>
+                </div>
+
+                <div id="pdfGenerationProgress" class="pdf-progress" style="display: none;">
+                    <div class="spinner" style="width: 20px; height: 20px;"></div>
+                    <span id="pdfProgressText">Generating PDF...</span>
+                    <div class="pdf-progress-bar">
+                        <div class="pdf-progress-fill" id="pdfProgressFill"></div>
                     </div>
                 </div>
 
@@ -449,7 +529,7 @@
                         </div>
                         <div class="stat-card">
                             <h3 id="statWithComplexity">0</h3>
-                            <p>With Complexity Analysis</p>
+                            <p>With Complexity</p>
                         </div>
                     </div>
                 </div>
@@ -475,8 +555,6 @@
                     <button class="toggle-btn" id="tableViewBtn">📋 Table View</button>
                 </div>
 
-                <div id="pdfGenerationProgress" class="pdf-progress" style="display: none;"></div>
-
                 <div id="contentSection"></div>
 
                 <div id="actionSection" style="display: none;">
@@ -484,11 +562,14 @@
                         <button class="btn btn-secondary" id="exportJsonBtn">
                             <span>📋</span> <span>Export JSON</span>
                         </button>
-                        <button class="btn btn-info" id="downloadAllPdfBtn">
-                            <span>📚</span> <span>Summary PDF</span>
+                        <button class="btn btn-info" id="saveOfflineBtn">
+                            <span>💾</span> <span>Save Offline</span>
+                        </button>
+                        <button class="btn btn-warning" id="downloadAllPdfBtn">
+                            <span>📚</span> <span>Download All PDF</span>
                         </button>
                         <button class="btn btn-success" id="downloadDetailedPdfBtn">
-                            <span>📖</span> <span>Complete Detailed PDF</span>
+                            <span>📖</span> <span>Detailed PDF</span>
                         </button>
                     </div>
                 </div>
@@ -499,47 +580,48 @@
                 <p style="margin: 15px 0; color: #4a5568;">Click "Start Dynamic Scraping" to fetch ALL AI topics from GeeksforGeeks in real-time</p>
                 <div style="display: flex; flex-direction: column; gap: 8px; align-items: center; margin-top: 20px;">
                     <p style="color: #00c853;">✓ Absolutely NO hardcoded data - everything fetched dynamically</p>
-                    <p style="color: #3b82f6;">✓ Real AI articles with complete explanations and code examples</p>
-                    <p style="color: #8b5cf6;">✓ Live complexity analysis and concept extraction</p>
-                    <p style="color: #f59e0b;">✓ All content comes directly from GeeksforGeeks search results</p>
+                    <p style="color: #3b82f6;">✓ Save offline for later access without internet</p>
+                    <p style="color: #8b5cf6;">✓ Generate comprehensive PDFs with all content</p>
+                    <p style="color: #f59e0b;">✓ All content comes directly from GeeksforGeeks</p>
                 </div>
             </div>
         </div>
 
         <div class="footer">
             <p>🔍 Dynamically scraping: https://www.geeksforgeeks.org/search/?gq=artificial+intelligence</p>
-            <p style="margin-top: 5px;">✓ ZERO Hardcoded Data • All Content Fetched in Real-Time • 100% Dynamic</p>
+            <p style="margin-top: 5px;">✓ ZERO Hardcoded Data • Offline Ready • PDF Export • 100% Dynamic</p>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         (function() {
-            // ZERO HARDCODED DATA - Everything will be fetched dynamically
-            // No sample data, no fallback content, no predefined examples
-            
-            // Only UI text is defined - no article data whatsoever
+            // ZERO HARDCODED DATA - Everything fetched dynamically
             const UI = {
                 status: {
                     ready: '⚡ Ready - Will scrape ALL AI content dynamically (zero hardcoded data)',
-                    discovering: '🔍 Discovering all AI topics and subtopics from search results...',
-                    scraping: '📚 Found {count} topics. Extracting detailed AI content from each...',
-                    success: '✅ Successfully scraped {count} AI topics with complete content! (Zero hardcoded data)',
+                    discovering: '🔍 Discovering all AI topics from search results...',
+                    scraping: '📚 Found {count} topics. Extracting detailed AI content...',
+                    success: '✅ Successfully scraped {count} AI topics! (Zero hardcoded data)',
                     error: '❌ Error: {error}',
-                    loadingPdf: '📄 Generating comprehensive PDF for: {title}',
-                    pdfSuccess: '✅ PDF generated successfully for: {title}',
+                    loadingPdf: '📄 Generating PDF for: {title}',
+                    pdfSuccess: '✅ PDF generated successfully',
                     pdfComplete: '✅ Complete PDF generated with {count} topics!',
                     exported: '✅ Exported {count} topics to JSON',
-                    generatingDetailed: '📚 Generating detailed PDF with complete AI content...',
-                    pdfProgress: '📄 Processing topic {current}/{total}: {title}'
+                    savedOffline: '✅ Saved {count} topics for offline access',
+                    offlineLoaded: '📁 Loaded {count} topics from offline storage'
                 }
             };
 
-            // State - initially empty, all data will be fetched
+            // State
             let allTopics = [];
             let filteredTopics = [];
             let categories = new Set();
             let isScraping = false;
             let currentView = 'card';
+
+            // Offline Storage
+            const STORAGE_KEY = 'gfg_ai_offline_data';
 
             const elements = {
                 urlInput: document.getElementById('urlInput'),
@@ -552,12 +634,16 @@
                 contentSection: document.getElementById('contentSection'),
                 actionSection: document.getElementById('actionSection'),
                 emptyState: document.getElementById('emptyState'),
+                storageInfo: document.getElementById('storageInfo'),
+                storedTopicsCount: document.getElementById('storedTopicsCount'),
                 currentPhase: document.getElementById('currentPhase'),
                 completedCount: document.getElementById('completedCount'),
                 totalCount: document.getElementById('totalCount'),
                 progressFill: document.getElementById('progressFill'),
                 currentTopic: document.getElementById('currentTopic'),
                 pdfProgress: document.getElementById('pdfGenerationProgress'),
+                pdfProgressFill: document.getElementById('pdfProgressFill'),
+                pdfProgressText: document.getElementById('pdfProgressText'),
                 statCategories: document.getElementById('statCategories'),
                 statTotal: document.getElementById('statTotal'),
                 statWithCode: document.getElementById('statWithCode'),
@@ -567,17 +653,110 @@
                 categoryFilter: document.getElementById('categoryFilter'),
                 filterCount: document.getElementById('filterCount'),
                 exportJsonBtn: document.getElementById('exportJsonBtn'),
+                saveOfflineBtn: document.getElementById('saveOfflineBtn'),
+                viewOfflineBtn: document.getElementById('viewOfflineBtn'),
+                clearOfflineBtn: document.getElementById('clearOfflineBtn'),
                 downloadAllPdfBtn: document.getElementById('downloadAllPdfBtn'),
                 downloadDetailedPdfBtn: document.getElementById('downloadDetailedPdfBtn'),
                 cardViewBtn: document.getElementById('cardViewBtn'),
                 tableViewBtn: document.getElementById('tableViewBtn')
             };
 
-            // CORS Proxies - only for fetching, no data stored
+            // CORS Proxies
             const PROXIES = [
                 { name: 'corsproxy.io', url: (t) => `https://corsproxy.io/?${encodeURIComponent(t)}`, extract: async (r) => await r.text() },
                 { name: 'api.allorigins.win', url: (t) => `https://api.allorigins.win/get?url=${encodeURIComponent(t)}`, extract: async (r) => (await r.json()).contents }
             ];
+
+            // Check for offline data on load
+            function checkOfflineData() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        if (data.topics && data.topics.length > 0) {
+                            elements.storedTopicsCount.textContent = data.topics.length;
+                            elements.storageInfo.style.display = 'flex';
+                            setStatus('info', `📁 Found ${data.topics.length} topics saved offline`);
+                        }
+                    }
+                } catch (e) {
+                    console.log('No offline data');
+                }
+            }
+
+            // Save offline
+            function saveOffline() {
+                if (allTopics.length === 0) {
+                    setStatus('error', 'No topics to save offline');
+                    return;
+                }
+
+                try {
+                    const data = {
+                        topics: allTopics,
+                        categories: Array.from(categories),
+                        timestamp: new Date().toISOString()
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    elements.storedTopicsCount.textContent = allTopics.length;
+                    elements.storageInfo.style.display = 'flex';
+                    setStatus('success', UI.status.savedOffline.replace('{count}', allTopics.length));
+                } catch (e) {
+                    setStatus('error', 'Failed to save offline: ' + e.message);
+                }
+            }
+
+            // Load offline
+            function loadOffline() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (!saved) {
+                        setStatus('error', 'No offline data found');
+                        return;
+                    }
+
+                    const data = JSON.parse(saved);
+                    allTopics = data.topics;
+                    filteredTopics = [...allTopics];
+                    categories = new Set(data.categories);
+
+                    // Update UI
+                    elements.statCategories.textContent = categories.size;
+                    elements.statTotal.textContent = allTopics.length;
+                    elements.statWithCode.textContent = allTopics.filter(t => t.codeExamples?.length > 0).length;
+                    elements.statWithComplexity.textContent = allTopics.filter(t => !t.timeComplexity?.includes('Not')).length;
+
+                    // Update filters
+                    const categoryOptions = ['<option value="">📁 All Categories</option>'];
+                    Array.from(categories).sort().forEach(c => 
+                        categoryOptions.push(`<option value="${c}">${c}</option>`));
+                    elements.categoryFilter.innerHTML = categoryOptions.join('');
+
+                    renderContent();
+
+                    elements.statsSection.style.display = 'block';
+                    elements.filterSection.style.display = 'block';
+                    elements.viewToggle.style.display = 'flex';
+                    elements.actionSection.style.display = 'block';
+                    elements.emptyState.style.display = 'none';
+
+                    setStatus('success', UI.status.offlineLoaded.replace('{count}', allTopics.length));
+                } catch (e) {
+                    setStatus('error', 'Failed to load offline data');
+                }
+            }
+
+            // Clear offline
+            function clearOffline() {
+                try {
+                    localStorage.removeItem(STORAGE_KEY);
+                    elements.storageInfo.style.display = 'none';
+                    setStatus('success', 'Offline data cleared');
+                } catch (e) {
+                    setStatus('error', 'Failed to clear offline data');
+                }
+            }
 
             function setStatus(type, message) {
                 elements.status.style.display = 'flex';
@@ -606,16 +785,15 @@
                         if (content && content.length > 100) return content;
                     } catch (e) { continue; }
                 }
-                throw new Error('All proxies failed - but NO hardcoded data will be shown');
+                throw new Error('All proxies failed');
             }
 
-            // Extract AI concepts from article
+            // Extract content functions
             function extractAIConcepts(html) {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const concepts = [];
                 
-                // Look for AI-specific terms
                 const aiKeywords = ['artificial intelligence', 'machine learning', 'deep learning', 
                                   'neural network', 'algorithm', 'model', 'training', 'data'];
                 
@@ -630,7 +808,6 @@
                 return concepts.slice(0, 3);
             }
 
-            // Extract code examples
             function extractCodeExamples(html) {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
@@ -649,7 +826,6 @@
                 return codes.slice(0, 2);
             }
 
-            // Extract difficulty from content
             function extractDifficulty(html, title) {
                 const text = html.toLowerCase() + ' ' + title.toLowerCase();
                 if (text.includes('beginner') || text.includes('basic') || text.includes('intro')) return 'Beginner';
@@ -657,7 +833,7 @@
                 return 'Intermediate';
             }
 
-            // Discover ALL AI topics from search results - ZERO HARDCODED DATA
+            // Discover topics
             async function discoverAllTopics() {
                 setStatus('loading', UI.status.discovering);
                 elements.currentPhase.textContent = 'Discovering all AI topics from search results...';
@@ -669,7 +845,6 @@
                 const topics = [];
                 const seen = new Set();
                 
-                // Find all article links in search results - completely dynamic
                 const linkSelectors = [
                     '.search-result a',
                     'a[href*="/"]',
@@ -688,11 +863,9 @@
                         if (!href || !title || title.length < 10) return;
                         if (seen.has(href)) return;
                         
-                        // Filter out non-article links
                         if (title.includes('Login') || title.includes('Sign') || 
                             title.includes('Search') || title.length > 150) return;
                         
-                        // Auto-categorize based on title
                         let category = 'Artificial Intelligence';
                         const lower = title.toLowerCase();
                         if (lower.includes('machine learning')) category = 'Machine Learning';
@@ -700,11 +873,6 @@
                         else if (lower.includes('neural')) category = 'Neural Networks';
                         else if (lower.includes('nlp') || lower.includes('natural language')) category = 'NLP';
                         else if (lower.includes('computer vision')) category = 'Computer Vision';
-                        else if (lower.includes('robotics')) category = 'Robotics';
-                        else if (lower.includes('expert system')) category = 'Expert Systems';
-                        else if (lower.includes('fuzzy')) category = 'Fuzzy Logic';
-                        else if (lower.includes('genetic')) category = 'Genetic Algorithms';
-                        else if (lower.includes('reinforcement')) category = 'Reinforcement Learning';
                         
                         const fullUrl = href.startsWith('http') ? href : 
                             `https://www.geeksforgeeks.org${href.startsWith('/') ? href : '/' + href}`;
@@ -717,7 +885,7 @@
                             title: title,
                             url: fullUrl,
                             category: category,
-                            difficulty: 'Intermediate', // Will be updated from content
+                            difficulty: 'Intermediate',
                             concepts: [],
                             codeExamples: [],
                             explanation: '',
@@ -728,23 +896,20 @@
                     });
                 });
                 
-                console.log(`🔍 Dynamically discovered ${topics.length} AI topics (zero hardcoded data)`);
                 return topics;
             }
 
-            // Extract detailed content from each article - ZERO HARDCODED DATA
+            // Extract topic details
             async function extractTopicDetails(topic, index, total) {
                 elements.currentTopic.textContent = `🤖 Scraping ${index}/${total}: ${topic.title}`;
                 
                 try {
                     const html = await fetchWithProxy(topic.url);
                     
-                    // Extract all content dynamically
                     const concepts = extractAIConcepts(html);
                     const codeExamples = extractCodeExamples(html);
                     const difficulty = extractDifficulty(html, topic.title);
                     
-                    // Extract complexity if available
                     let timeComplexity = 'Not specified in article';
                     let spaceComplexity = 'Not specified in article';
                     
@@ -755,7 +920,6 @@
                     const spaceMatch = text.match(/space complexity[:\s]*([^.\n]+)/i);
                     if (spaceMatch) spaceComplexity = spaceMatch[1].trim();
                     
-                    // Get first paragraph as explanation
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const firstPara = doc.querySelector('p');
@@ -773,7 +937,6 @@
                     };
                     
                 } catch (error) {
-                    console.warn(`Failed to scrape ${topic.title}:`, error);
                     return {
                         ...topic,
                         concepts: ['⚠️ Failed to load content - click "View Online" to read'],
@@ -786,7 +949,136 @@
                 }
             }
 
-            // Main scraping function - NO HARDCODED DATA
+            // Generate PDF
+            async function generatePDF(detailed = false) {
+                if (filteredTopics.length === 0) {
+                    setStatus('error', 'No topics to generate PDF');
+                    return;
+                }
+
+                elements.pdfProgress.style.display = 'flex';
+                elements.pdfProgressFill.style.width = '0%';
+                
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF();
+                    
+                    // Title page
+                    pdf.setFontSize(24);
+                    pdf.setTextColor(59, 130, 246);
+                    pdf.text('GeeksforGeeks AI Learning', 20, 30);
+                    
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(0, 0, 0);
+                    pdf.text(`Generated: ${new Date().toLocaleString()}`, 20, 45);
+                    pdf.text(`Total Topics: ${filteredTopics.length}`, 20, 55);
+                    
+                    if (detailed) {
+                        pdf.text('Detailed Version - Includes All Content', 20, 65);
+                    }
+                    
+                    let y = 80;
+                    
+                    // Topics
+                    for (let i = 0; i < filteredTopics.length; i++) {
+                        const t = filteredTopics[i];
+                        
+                        // Update progress
+                        const progress = ((i + 1) / filteredTopics.length) * 100;
+                        elements.pdfProgressFill.style.width = `${progress}%`;
+                        elements.pdfProgressText.textContent = `Processing ${i + 1}/${filteredTopics.length}: ${t.title.substring(0, 40)}...`;
+                        
+                        // Check page space
+                        if (y > 250) {
+                            pdf.addPage();
+                            y = 30;
+                        }
+                        
+                        // Topic header
+                        pdf.setFontSize(16);
+                        pdf.setTextColor(59, 130, 246);
+                        pdf.text(`${i + 1}. ${t.title.substring(0, 70)}`, 20, y);
+                        y += 8;
+                        
+                        // Metadata
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.text(`Category: ${t.category} | Difficulty: ${t.difficulty}`, 20, y);
+                        y += 6;
+                        
+                        // Concepts
+                        if (t.concepts && t.concepts.length > 0) {
+                            pdf.setFontSize(11);
+                            pdf.setTextColor(0, 0, 0);
+                            pdf.text('Key Concepts:', 20, y);
+                            y += 5;
+                            
+                            pdf.setFontSize(9);
+                            t.concepts.slice(0, detailed ? 3 : 1).forEach(concept => {
+                                if (y > 270) {
+                                    pdf.addPage();
+                                    y = 30;
+                                }
+                                const lines = pdf.splitTextToSize(`• ${concept.substring(0, detailed ? 200 : 100)}...`, 170);
+                                pdf.text(lines, 25, y);
+                                y += lines.length * 5 + 2;
+                            });
+                        }
+                        
+                        // Code (only in detailed)
+                        if (detailed && t.codeExamples && t.codeExamples.length > 0) {
+                            if (y > 240) {
+                                pdf.addPage();
+                                y = 30;
+                            }
+                            
+                            pdf.setFontSize(10);
+                            pdf.setTextColor(0, 0, 0);
+                            pdf.text('Code Example:', 20, y);
+                            y += 5;
+                            
+                            pdf.setFont('courier');
+                            pdf.setFontSize(7);
+                            const code = t.codeExamples[0].substring(0, 400);
+                            const codeLines = pdf.splitTextToSize(code, 170);
+                            pdf.text(codeLines, 25, y);
+                            y += codeLines.length * 4 + 5;
+                            pdf.setFont('helvetica');
+                        }
+                        
+                        // Complexity
+                        if (y > 260) {
+                            pdf.addPage();
+                            y = 30;
+                        }
+                        
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(100, 100, 100);
+                        pdf.text(`Time: ${t.timeComplexity} | Space: ${t.spaceComplexity}`, 20, y);
+                        y += 8;
+                        
+                        // URL
+                        pdf.setTextColor(59, 130, 246);
+                        pdf.text('URL: ' + t.url, 20, y);
+                        y += 10;
+                    }
+                    
+                    // Save PDF
+                    const filename = detailed ? 
+                        `gfg_ai_detailed_${new Date().toISOString().slice(0,10)}.pdf` : 
+                        `gfg_ai_summary_${new Date().toISOString().slice(0,10)}.pdf`;
+                    
+                    pdf.save(filename);
+                    setStatus('success', UI.status.pdfComplete.replace('{count}', filteredTopics.length));
+                    
+                } catch (error) {
+                    setStatus('error', 'PDF generation failed: ' + error.message);
+                } finally {
+                    elements.pdfProgress.style.display = 'none';
+                }
+            }
+
+            // Main scraping function
             async function startScraping() {
                 if (isScraping) return;
                 
@@ -804,21 +1096,18 @@
                 elements.actionSection.style.display = 'none';
                 
                 try {
-                    // Discover topics - ALL DYNAMIC, NO HARDCODING
                     const discovered = await discoverAllTopics();
                     
-                    if (discovered.length === 0) throw new Error('No topics found - the page structure may have changed');
+                    if (discovered.length === 0) throw new Error('No topics found');
                     
                     elements.totalCount.textContent = discovered.length;
                     setStatus('loading', UI.status.scraping.replace('{count}', discovered.length));
                     
-                    // Update category filter
                     const categoryOptions = ['<option value="">📁 All Categories</option>'];
                     Array.from(categories).sort().forEach(c => 
                         categoryOptions.push(`<option value="${c}">${c}</option>`));
                     elements.categoryFilter.innerHTML = categoryOptions.join('');
                     
-                    // Scrape each topic
                     const scraped = [];
                     for (let i = 0; i < discovered.length; i++) {
                         elements.currentPhase.textContent = `Scraping detailed AI content (${i + 1}/${discovered.length})`;
@@ -829,18 +1118,16 @@
                         elements.completedCount.textContent = i + 1;
                         elements.progressFill.style.width = `${((i + 1) / discovered.length) * 100}%`;
                         
-                        // Rate limiting
                         await new Promise(r => setTimeout(r, 500));
                     }
                     
                     allTopics = scraped;
                     filteredTopics = [...allTopics];
                     
-                    // Update stats
                     elements.statCategories.textContent = categories.size;
                     elements.statTotal.textContent = allTopics.length;
                     elements.statWithCode.textContent = allTopics.filter(t => t.codeExamples.length > 0).length;
-                    elements.statWithComplexity.textContent = allTopics.filter(t => !t.timeComplexity.includes('Not specified')).length;
+                    elements.statWithComplexity.textContent = allTopics.filter(t => !t.timeComplexity.includes('Not')).length;
                     
                     renderContent();
                     
@@ -861,7 +1148,7 @@
                 }
             }
 
-            // Render card view with dynamically scraped content
+            // Render functions
             function renderCardView() {
                 if (filteredTopics.length === 0) {
                     elements.contentSection.innerHTML = '<div class="empty-state">No matching topics found</div>';
@@ -880,40 +1167,35 @@
                         📌 ${category}
                         <span class="category-count">${grouped[category].length} topics</span>
                         <span class="zero-badge">0% hardcoded</span>
+                        <span class="offline-badge">offline ready</span>
                     </div>`;
                     html += '<div class="subcategory-grid">';
                     
-                    grouped[category].forEach((topic, idx) => {
+                    grouped[category].forEach(topic => {
                         const codeDisplay = topic.codeExamples.length > 0 
                             ? `<div class="code-preview-container">
-                                <pre class="code-preview">${escapeHtml(topic.codeExamples[0].substring(0, 300))}${topic.codeExamples[0].length > 300 ? '\n// ...' : ''}</pre>
+                                <pre class="code-preview">${escapeHtml(topic.codeExamples[0].substring(0, 200))}${topic.codeExamples[0].length > 200 ? '\n// ...' : ''}</pre>
                                </div>`
                             : '';
                         
                         const conceptsHtml = topic.concepts.map(c => 
-                            `<li style="margin: 5px 0;">${escapeHtml(c.substring(0, 150))}...</li>`
+                            `<li>${escapeHtml(c.substring(0, 100))}...</li>`
                         ).join('');
                         
                         html += `
                             <div class="topic-card">
                                 <div class="topic-header">
-                                    <span class="topic-title">${escapeHtml(topic.title)}</span>
+                                    <span class="topic-title">${escapeHtml(topic.title.substring(0, 70))}...</span>
                                     <span class="difficulty-badge difficulty-${topic.difficulty.toLowerCase()}">${topic.difficulty}</span>
                                 </div>
                                 <div class="ai-preview">
                                     <strong>🤖 AI Concepts:</strong>
-                                    <ul style="margin-top: 8px; padding-left: 20px;">
-                                        ${conceptsHtml || '<li>Full explanation in article</li>'}
-                                    </ul>
+                                    <ul>${conceptsHtml}</ul>
                                 </div>
                                 ${codeDisplay}
-                                <div class="topic-concepts">
-                                    <strong>📝 Explanation Preview:</strong><br>
-                                    ${escapeHtml(topic.explanation.substring(0, 200))}...
-                                </div>
                                 <div class="topic-meta">
-                                    <span class="meta-item">⏱️ Time: ${escapeHtml(topic.timeComplexity.substring(0, 30))}</span>
-                                    <span class="meta-item">💾 Space: ${escapeHtml(topic.spaceComplexity.substring(0, 30))}</span>
+                                    <span class="meta-item">⏱️ ${escapeHtml(topic.timeComplexity.substring(0, 25))}</span>
+                                    <span class="meta-item">💾 ${escapeHtml(topic.spaceComplexity.substring(0, 25))}</span>
                                 </div>
                                 <div class="topic-actions">
                                     <a href="${escapeHtml(topic.url)}" target="_blank" class="btn btn-small btn-secondary">
@@ -930,7 +1212,6 @@
                 elements.contentSection.innerHTML = html;
             }
 
-            // Table view
             function renderTableView() {
                 if (filteredTopics.length === 0) {
                     elements.contentSection.innerHTML = '<div class="empty-state">No matching topics found</div>';
@@ -946,8 +1227,6 @@
                                 <th>Topic</th>
                                 <th>Difficulty</th>
                                 <th>AI Concepts</th>
-                                <th>Time</th>
-                                <th>Space</th>
                                 <th>Actions</th>
                             </tr></thead>
                             <tbody>
@@ -958,18 +1237,10 @@
                         <tr>
                             <td>${i + 1}</td>
                             <td>${escapeHtml(t.category)}</td>
-                            <td><strong>${escapeHtml(t.title.substring(0, 50))}...</strong></td>
+                            <td><strong>${escapeHtml(t.title.substring(0, 40))}...</strong></td>
                             <td><span class="difficulty-badge difficulty-${t.difficulty.toLowerCase()}">${t.difficulty}</span></td>
-                            <td><div style="max-width: 250px;">${escapeHtml(t.concepts[0]?.substring(0, 100) || 'AI content')}...</div></td>
-                            <td>${escapeHtml(t.timeComplexity.substring(0, 25))}</td>
-                            <td>${escapeHtml(t.spaceComplexity.substring(0, 25))}</td>
-                            <td>
-                                <div class="table-actions">
-                                    <a href="${escapeHtml(t.url)}" target="_blank" class="btn btn-small btn-secondary">
-                                        View
-                                    </a>
-                                </div>
-                            </td>
+                            <td>${escapeHtml(t.concepts[0]?.substring(0, 60) || '')}...</td>
+                            <td><a href="${escapeHtml(t.url)}" target="_blank">View</a></td>
                         </tr>
                     `;
                 });
@@ -993,7 +1264,7 @@
                     return true;
                 });
                 
-                elements.filterCount.textContent = `${filteredTopics.length} topics found (0% hardcoded)`;
+                elements.filterCount.textContent = `${filteredTopics.length} topics found`;
                 renderContent();
             }
 
@@ -1018,7 +1289,7 @@
                 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `gfg_ai_dynamic_${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `gfg_ai_${new Date().toISOString().slice(0,10)}.json`;
                 a.click();
                 
                 setStatus('success', UI.status.exported.replace('{count}', filteredTopics.length));
@@ -1030,6 +1301,12 @@
             elements.difficultyFilter.addEventListener('change', filterTopics);
             elements.categoryFilter.addEventListener('change', filterTopics);
             elements.exportJsonBtn.addEventListener('click', exportToJSON);
+            elements.saveOfflineBtn.addEventListener('click', saveOffline);
+            elements.viewOfflineBtn.addEventListener('click', loadOffline);
+            elements.clearOfflineBtn.addEventListener('click', clearOffline);
+            
+            elements.downloadAllPdfBtn.addEventListener('click', () => generatePDF(false));
+            elements.downloadDetailedPdfBtn.addEventListener('click', () => generatePDF(true));
             
             elements.cardViewBtn.addEventListener('click', () => {
                 currentView = 'card';
@@ -1045,6 +1322,8 @@
                 renderContent();
             });
 
+            // Initialize
+            checkOfflineData();
             setStatus('info', UI.status.ready);
         })();
     </script>
