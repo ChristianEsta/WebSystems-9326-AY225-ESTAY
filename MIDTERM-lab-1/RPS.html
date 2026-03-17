@@ -40,6 +40,12 @@
             padding: 1.2rem 2rem;
             box-shadow: 0 12px 30px rgba(0,0,0,0.15);
             border-bottom: 1px solid #2d3344;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .site-header:hover {
+            background: rgba(255, 123, 74, 0.9);
         }
 
         .header-container {
@@ -57,7 +63,8 @@
             transition: transform 0.2s;
         }
 
-        .logo-icon:hover {
+        .site-header:hover .logo-icon {
+            color: white;
             transform: rotate(8deg) scale(1.05);
         }
 
@@ -72,6 +79,10 @@
             font-weight: 300;
         }
 
+        .site-header:hover h1 span {
+            color: white;
+        }
+
         .site-header .sub {
             margin-left: auto;
             font-size: 0.95rem;
@@ -79,6 +90,10 @@
             padding: 0.4rem 1rem;
             border-radius: 40px;
             border: 1px solid #3a4055;
+        }
+
+        .site-header:hover .sub {
+            background: rgba(255,255,255,0.2);
         }
 
         /* main container */
@@ -174,6 +189,18 @@
             border-color: #ff7b4a;
             transform: translateY(-3px);
             box-shadow: 0 12px 18px -8px #ff7b4a80;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-btn:disabled:hover {
+            background: #1e1e2f;
+            transform: none;
+            box-shadow: none;
         }
 
         .invalid-feedback {
@@ -309,7 +336,35 @@
             font-weight: 700;
             line-height: 1.3;
             margin-bottom: 1rem;
+        }
+
+        .game-title a {
             color: #0b0e19;
+            text-decoration: none;
+            transition: color 0.2s;
+            display: inline-block;
+            position: relative;
+        }
+
+        .game-title a::after {
+            content: '\f08e';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            color: #ff7b4a;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+
+        .game-title a:hover::after {
+            opacity: 1;
+            transform: translateX(3px);
+        }
+
+        .game-title a:hover {
+            color: #ff7b4a;
         }
 
         .game-detail {
@@ -408,13 +463,61 @@
             border-color: #ff7b4a;
         }
 
+        .json-download.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
         .sr-only {
             position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+        }
+
+        /* Click hint tooltip */
+        .click-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e1e2f;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: bounce 2s infinite;
+            z-index: 1000;
+            border: 1px solid #ff7b4a;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .click-hint i {
+            color: #ff7b4a;
+            font-size: 1.2rem;
+        }
+
+        .click-hint button {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 1.2rem;
+        }
+
+        .click-hint button:hover {
+            color: white;
         }
     </style>
 </head>
 <body>
-    <header class="site-header">
+    <header class="site-header" id="header">
         <div class="header-container">
             <i class="fas fa-gamepad logo-icon"></i>
             <h1>RPS <span>scraper</span></h1>
@@ -442,7 +545,7 @@
                     <input type="text" id="searchInput" placeholder="Filter by title, dev, platform...">
                     <button id="clearFilterBtn"><i class="fas fa-times"></i></button>
                 </div>
-                <a id="downloadJson" class="json-download" href="#" download="rps_games.json"><i class="fas fa-download"></i> JSON</a>
+                <a id="downloadJson" class="json-download disabled" href="#" download="rps_games.json"><i class="fas fa-download"></i> JSON</a>
             </div>
         </div>
 
@@ -456,12 +559,21 @@
         <i class="fas fa-code"></i> educational project · assigned: Rock Paper Shotgun · no hardcoded game data — every fetch is live
     </footer>
 
+    <!-- Click hint (will be shown after scraping) -->
+    <div id="clickHint" class="click-hint" style="display: none;">
+        <i class="fas fa-mouse-pointer"></i>
+        <span>Click game titles to visit their page!</span>
+        <button onclick="this.parentElement.style.display='none'">✕</button>
+    </div>
+
     <script>
         (function() {
             // ------ STATE ------
             let allGames = [];            // raw scraped data (always fresh from fetch)
             let filteredGames = [];        // after search filter
             let lastValidUrl = 'https://www.rockpapershotgun.com/games';
+            const RPS_HOMEPAGE = 'https://www.rockpapershotgun.com/';
+            const RPS_BASE_URL = 'https://www.rockpapershotgun.com';
 
             // DOM elements
             const urlInput = document.getElementById('urlInput');
@@ -472,6 +584,26 @@
             const searchInput = document.getElementById('searchInput');
             const clearFilterBtn = document.getElementById('clearFilterBtn');
             const downloadLink = document.getElementById('downloadJson');
+            const clickHint = document.getElementById('clickHint');
+            const header = document.getElementById('header');
+
+            // Navigate to RPS homepage when header is clicked
+            header.addEventListener('click', () => {
+                window.open(RPS_HOMEPAGE, '_blank');
+            });
+
+            // Create game URL from title
+            function createGameUrl(title) {
+                // Convert title to URL-friendly format
+                const urlSlug = title
+                    .toLowerCase()
+                    .replace(/[^\w\s-]/g, '') // Remove special characters
+                    .replace(/\s+/g, '-')      // Replace spaces with hyphens
+                    .replace(/-+/g, '-')        // Replace multiple hyphens with single hyphen
+                    .replace(/^-|-$/g, '');     // Remove leading/trailing hyphens
+                
+                return `${RPS_BASE_URL}/games/${urlSlug}`;
+            }
 
             // ------ helper: render games (based on filteredGames) -----
             function renderGrid() {
@@ -487,9 +619,14 @@
 
                 let html = '';
                 filteredGames.forEach((game, idx) => {
+                    const gameUrl = createGameUrl(game.title);
                     html += `
                         <div class="game-card" style="animation-delay: ${idx * 0.02}s">
-                            <div class="game-title">${escapeHtml(game.title) || '??'}</div>
+                            <div class="game-title">
+                                <a href="${gameUrl}" target="_blank" rel="noopener noreferrer" title="Click to read on Rock Paper Shotgun">
+                                    ${escapeHtml(game.title) || 'Unknown Title'}
+                                </a>
+                            </div>
                             <div class="game-detail"><i class="fas fa-calendar-alt"></i><div class="detail-text"><strong>Release</strong> ${formatField(game.releaseDate)}</div></div>
                             <div class="game-detail"><i class="fas fa-star"></i><div class="detail-text"><strong>Features</strong> ${formatField(game.features)}</div></div>
                             <div class="game-detail"><i class="fas fa-desktop"></i><div class="detail-text"><strong>Platforms</strong> ${formatField(game.platforms)}</div></div>
@@ -500,8 +637,27 @@
                         </div>
                     `;
                 });
+                
                 gridContainer.innerHTML = html;
                 gameCounter.innerHTML = `<i class="far fa-file-alt"></i> ${allGames.length} game(s) total · ${filteredGames.length} shown`;
+                
+                // Enable download link
+                downloadLink.classList.remove('disabled');
+                
+                // Update download link with current data
+                const jsonData = JSON.stringify(allGames, null, 2);
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                downloadLink.href = URL.createObjectURL(blob);
+                
+                // Show click hint if games are loaded
+                if (allGames.length > 0) {
+                    clickHint.style.display = 'flex';
+                    setTimeout(() => {
+                        if (clickHint.style.display === 'flex') {
+                            clickHint.style.display = 'none';
+                        }
+                    }, 8000);
+                }
             }
 
             // small helpers
@@ -536,13 +692,9 @@
                 renderGrid();
             }
 
-            // ------ SCRAPING SIMULATION (live fetch via CORS proxy) -----
-            // Because Rock Paper Shotgun does not allow direct fetch from browser (CORS),
-            // we use a public CORS proxy to get HTML and then extract fields.
-            // In a real project you'd have a backend. This respects "NO HARDCODED GAME DATA"
-            // and handles invalid URL / network errors gracefully.
+            // ------ SCRAPING FUNCTION -----
             async function scrapeFromUrl(url) {
-                // validate URL format (very basic)
+                // validate URL format
                 try {
                     new URL(url);
                 } catch (e) {
@@ -550,16 +702,20 @@
                     return false;
                 }
 
-                // rock paper shotgun check: if it doesn't contain rockpapershotgun, treat as invalid for this assignment
+                // rock paper shotgun check
                 if (!url.includes('rockpapershotgun.com')) {
                     showMessage('invalid_url', '🚫 URL not recognized as Rock Paper Shotgun. Please use a valid RPS games page.');
                     return false;
                 }
 
                 showMessage('loading', '⏳ Scraping live data from RPS... (using proxy)');
+                
+                // Disable scrape button during scraping
+                scrapeBtn.disabled = true;
+                scrapeBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> scraping...';
 
                 try {
-                    // Use CORS proxy to fetch the page (no API key required)
+                    // Use CORS proxy to fetch the page
                     const proxy = 'https://api.allorigins.win/raw?url=';
                     const targetUrl = encodeURIComponent(url);
                     const response = await fetch(proxy + targetUrl);
@@ -568,17 +724,14 @@
 
                     const html = await response.text();
 
-                    // Parse HTML and extract games (Mimicking RPS structure, but we generate dynamic fields based on common patterns)
-                    // We must NOT return hardcoded game names. We parse the page for article titles etc.
+                    // Parse HTML
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
 
-                    // RPS games listing: look for articles or game items.
-                    // typical selectors: .game-item, article, .post, .listing-item
+                    // Find game elements
                     let gameElements = doc.querySelectorAll('article, .game-item, .post, .listing-item, .item-list li');
-                    // if none found, fallback to 'a' with game titles? better to extract any h2/h3 with game context.
+                    
                     if (gameElements.length === 0) {
-                        // fallback: look for headings that might be game names
                         gameElements = doc.querySelectorAll('h2, h3');
                     }
 
@@ -586,21 +739,23 @@
                     const seenTitles = new Set();
 
                     for (let el of gameElements) {
-                        // attempt to find title: usually first link or heading text
+                        // Find title
                         let titleEl = el.querySelector('h2 a, h3 a, h2, h3, .title a');
                         let title = titleEl ? titleEl.textContent.trim() : (el.textContent.trim().slice(0,60));
+                        
                         if (!title || title.length < 3 || seenTitles.has(title)) continue;
-                        // avoid nav/menu text
-                        if (title.includes('cookie') || title.includes('menu') || title.length > 80) continue;
+                        
+                        // Skip unwanted text
+                        if (title.includes('cookie') || title.includes('menu') || 
+                            title.includes('subscribe') || title.includes('newsletter') ||
+                            title.length > 80) continue;
 
                         seenTitles.add(title);
 
-                        // generate other fields based on nearby paragraphs / random? but we need structured yet plausible.
-                        // To stay ethical and realistic, we derive from page snippets. For fields not found, set Not Available.
+                        // Extract other fields
                         const releaseMatch = el.textContent.match(/(19|20)\d{2}/g);
                         const releaseDate = releaseMatch ? releaseMatch[0] : 'Not Available';
 
-                        // try to find platform mentions (windows, ps5, xbox, switch)
                         const platformKeywords = ['windows', 'pc', 'playstation', 'xbox', 'switch', 'ios', 'android'];
                         const lowerText = el.textContent.toLowerCase();
                         let platforms = [];
@@ -609,18 +764,14 @@
                         }
                         const platformStr = platforms.length ? platforms.join(', ') : 'Not Available';
 
-                        // features: pick a sentence from description
                         const desc = el.querySelector('p, .excerpt, .description');
-                        let features = desc ? desc.textContent.trim().replace(/\s+/g, ' ').slice(0,120) + '…' : 'Not Available';
-                        if (features === 'Not Available') features = 'Game overview available on site.';
+                        let features = desc ? desc.textContent.trim().replace(/\s+/g, ' ').slice(0,120) + '…' : 'Game overview available on site.';
 
-                        // availability: check for "out now", "release", "preorder"
                         let availability = 'Not Available';
                         if (lowerText.includes('out now')) availability = 'Out now';
                         else if (lowerText.includes('preorder')) availability = 'Pre-order';
                         else if (lowerText.includes('coming soon')) availability = 'Coming soon';
 
-                        // developer/publisher: often next to "developer" or "dev"
                         let developer = 'Not Available';
                         let publisher = 'Not Available';
                         const textBlocks = el.innerHTML;
@@ -628,9 +779,6 @@
                         if (devMatch) developer = devMatch[1].trim();
                         const pubMatch = textBlocks.match(/publisher:?\s*([^<,]+)/i);
                         if (pubMatch) publisher = pubMatch[1].trim();
-
-                        // if still missing, derive from domain context but never hardcode
-                        if (developer === 'Not Available' && Math.random() > 0.5) developer = 'Unknown studio (RPS)';  // we still keep it not hardcoded? but it's dynamic. Actually we only use derived info.
 
                         extractedGames.push({
                             title: title.slice(0,100),
@@ -642,49 +790,40 @@
                             publisher
                         });
 
-                        if (extractedGames.length >= 12) break; // at least 10, get 12
-                    }
-
-                    if (extractedGames.length === 0) {
-                        // fallback to 10 "real looking" but still not hardcoded game names — we must avoid hardcoded game data.
-                        // Instead we simulate using page metadata: 
-                        const fallbackTitles = [];
-                        const links = doc.querySelectorAll('a[href*="review"], a[href*="game"]');
-                        for (let link of links) {
-                            const text = link.textContent.trim();
-                            if (text.length > 15 && !fallbackTitles.includes(text)) fallbackTitles.push(text);
-                            if (fallbackTitles.length >= 10) break;
-                        }
-                        for (let i=0; i<Math.min(10, fallbackTitles.length); i++) {
-                            extractedGames.push({
-                                title: fallbackTitles[i] || `RPS feature ${i+1}`,
-                                releaseDate: '2024',
-                                features: 'Read on Rock Paper Shotgun',
-                                platforms: 'PC',
-                                availability: 'Available',
-                                developer: 'Not Available',
-                                publisher: 'Not Available'
-                            });
-                        }
+                        if (extractedGames.length >= 15) break;
                     }
 
                     if (extractedGames.length === 0) {
                         showMessage('error', 'Could not extract games – page structure unrecognized.');
+                        
+                        // Re-enable scrape button
+                        scrapeBtn.disabled = false;
+                        scrapeBtn.innerHTML = '<i class="fas fa-bolt"></i> scrape games';
+                        
                         return false;
                     }
 
-                    // success
-                    allGames = extractedGames.slice(0, 15); // store max 15, ensure at least 10.
+                    // Success
+                    allGames = extractedGames.slice(0, 15);
                     filteredGames = [...allGames];
                     renderGrid();
-                    updateDownloadLink();
                     showMessage('success', `✅ Scraped ${allGames.length} games from Rock Paper Shotgun.`);
                     lastValidUrl = url;
+                    
+                    // Re-enable scrape button
+                    scrapeBtn.disabled = false;
+                    scrapeBtn.innerHTML = '<i class="fas fa-bolt"></i> scrape games';
+                    
                     return true;
 
                 } catch (err) {
                     console.error(err);
                     showMessage('error', `Network / scraping error: ${err.message}. Try again or check URL.`);
+                    
+                    // Re-enable scrape button
+                    scrapeBtn.disabled = false;
+                    scrapeBtn.innerHTML = '<i class="fas fa-bolt"></i> scrape games';
+                    
                     return false;
                 }
             }
@@ -699,13 +838,6 @@
                 } else {
                     messageArea.innerHTML = `<div class="invalid-feedback"><i class="fas fa-times-circle"></i> ${text}</div>`;
                 }
-            }
-
-            function updateDownloadLink() {
-                const jsonData = JSON.stringify(allGames, null, 2);
-                const blob = new Blob([jsonData], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                downloadLink.href = url;
             }
 
             // Clear filter
@@ -724,14 +856,10 @@
             searchInput.addEventListener('input', applyFilter);
             clearFilterBtn.addEventListener('click', resetFilter);
 
-            // initial scrape on page load (with default RPS url) - to demonstrate no hardcoded data.
-            window.addEventListener('load', async () => {
-                // show loading immediately
-                showMessage('loading', '⏳ Initial live fetch from Rock Paper Shotgun...');
-                await scrapeFromUrl(lastValidUrl);
+            // Don't auto-scrape on load to avoid rate limiting
+            window.addEventListener('load', () => {
+                showMessage('info', '👆 Enter a Rock Paper Shotgun URL and click scrape to start');
             });
-
-            // helper for field fallback
         })();
     </script>
 </body>
